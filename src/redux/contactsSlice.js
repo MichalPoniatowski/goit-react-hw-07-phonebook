@@ -1,59 +1,54 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
-import { fetchContacts } from './actions';
+import { createSlice } from '@reduxjs/toolkit';
+import { fetchContacts, addContact, deleteContact } from './actions';
+
+const handlePending = state => {
+  state.isLoading = true;
+};
+
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload.message;
+};
 
 const contactsSlice = createSlice({
   name: 'contacts',
   initialState: {
-    items: [],
+    contacts: [],
     isLoading: false,
     error: null,
   },
   extraReducers: {
-    [fetchContacts.pending](state) {
-      state.isLoading = true;
-    },
+    [fetchContacts.pending]: handlePending,
+
     [fetchContacts.fulfilled](state, action) {
       state.isLoading = false;
       state.error = null;
-      state.items = action.payload;
+      state.contacts = action.payload;
     },
-    [fetchContacts.rejected](state, action) {
+    [fetchContacts.rejected]: handleRejected,
+
+    [addContact.pending]: handlePending,
+
+    [addContact.fulfilled](state, action) {
       state.isLoading = false;
-      state.error = action.payload.message;
+      state.error = null;
+      state.contacts.push(action.payload);
     },
+    [addContact.rejected]: handleRejected,
+
+    [deleteContact.pending]: handlePending,
+
+    [deleteContact.fulfilled](state, action) {
+      state.isLoading = false;
+      state.error = null;
+      console.log('ACTION', action.payload.id);
+      const index = state.contacts.findIndex(
+        contact => contact.id === action.payload.id
+      );
+      state.contacts.splice(index, 1);
+    },
+    [deleteContact.rejected]: handleRejected,
   },
 });
 
-export const { addContact, deleteContact } = contactsSlice.actions;
 export const contactsReducer = contactsSlice.reducer;
-
-// const contactsSlice = createSlice({
-//   name: 'contacts',
-//   initialState: {
-//     items: [],
-//     isLoading: false,
-//     error: null,
-//   },
-//   reducers: {
-//     addContact: {
-//       reducer(state, action) {
-//         state.push(action.payload);
-//       },
-//       prepare({ name, number }) {
-//         return {
-//           payload: {
-//             name,
-//             number,
-//             id: nanoid(),
-//           },
-//         };
-//       },
-//     },
-//     deleteContact(state, action) {
-//       return state.filter(contact => contact.id !== action.payload);
-//     },
-//   },
-// });
-
-// export const { addContact, deleteContact } = contactsSlice.actions;
-// export const contactsReducer = contactsSlice.reducer;
